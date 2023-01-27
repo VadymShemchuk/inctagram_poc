@@ -35,7 +35,7 @@ class Service extends StateManager<BasicState> {
   }
 
   void setLoaderOff() {
-    _isLoading = true;
+    _isLoading = false;
     updateState();
   }
 

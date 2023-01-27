@@ -10,6 +10,7 @@ import 'package:insta_poc/presentation/instagram_item_card.dart';
 import 'package:insta_poc/presentation/search_delegate.dart';
 
 class ShopView extends StatefulWidget {
+  //TODO: statlless
   final ShopPresenter presenter;
 
   const ShopView({

@@ -6,8 +6,6 @@ class OauthEvent implements Event {}
 
 class ShopEvent implements Event {}
 
-class UploadMediasEvent implements Event {}
-
 class SuccessEvent implements Event {}
 
 class ErrorEvent implements Event {}

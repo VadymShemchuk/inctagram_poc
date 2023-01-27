@@ -5,7 +5,6 @@ import 'package:http/http.dart' as http;
 import 'package:insta_poc/api/api_constants/api_constants.dart';
 import 'package:insta_poc/api/api_constants/api_keys.dart';
 import 'package:insta_poc/api/media_caption_model.dart';
-import 'package:insta_poc/api/tag_model.dart';
 import 'package:insta_poc/modules/shop/shop_items_service.dart';
 import 'package:insta_poc/state_managment/service.dart';
 import 'package:insta_poc/store/store_consts.dart';
@@ -22,34 +21,20 @@ class _Keys {
 
 class InstagramApiService extends Service {
   final ShopItemsService _itemsService;
-  Map<String, dynamic> mediasList = {};
-  // List<InstagramMediaCaptionModel> mediaCaptions = [];
-  // List<InstagramMediaModel> _mediasResults = [];
-  // List<String> tags = [];
-  // List<TagModel> tagsModels = [];
 
   InstagramApiService(this._itemsService) : super();
-
-  Future<void> restore() async {
-    setLoaderOn();
-    ApiConstants.clientID = await StoreUtils.getString(StoreStringId.clientId);
-    ApiConstants.appSecret =
-        await StoreUtils.getString(StoreStringId.appSecret);
-    ApiConstants.userID = await StoreUtils.getString(StoreStringId.userID);
-    ApiConstants.longToken =
-        await StoreUtils.getString(StoreStringId.longToken);
-    ApiConstants.expiresInSeconds =
-        await StoreUtils.getInt(StoreIntId.expiresInSeconds);
-    setLoaderOff();
-  }
 
   /// [oauthUrl] simply the url used to communicate with Instagram API at the beginning.
   String? shortAccessToken;
   String? authorizationCode;
-  String oauthUrl =
-      '${ApiConstants.instagramOAuth}${ApiKey.clientIDKey}=${ApiConstants.clientID}&'
-      '${ApiKey.redirectUriKey}=${ApiConstants.redirectUri}&${ApiKey.scopeKey}='
-      '${_Keys.scopeKey}&${ApiKey.responseTypeKey}=${_Keys.responseTypeKey}';
+  String oauthUrl = '';
+
+  void getOauthUrl() {
+    oauthUrl =
+        '${ApiConstants.instagramOAuth}${ApiKey.clientIDKey}=${ApiConstants.clientID}&'
+        '${ApiKey.redirectUriKey}=${ApiConstants.redirectUri}&${ApiKey.scopeKey}='
+        '${_Keys.scopeKey}&${ApiKey.responseTypeKey}=${_Keys.responseTypeKey}';
+  }
 
   /// Presets your required fields on each call api.
   /// Please refers to https://developers.facebook.com/docs/instagram-basic-display-api/reference .
@@ -71,13 +56,9 @@ class InstagramApiService extends Service {
   }
 
   Future<bool> getTokenAndUserID() async {
-    /// Request token.
-    /// Set token.
-    /// Returning status request as bool.
-
     final http.Response response =
         await http.post(Uri.parse(ApiConstants.instagramAsesTokenUrl), body: {
-      ApiKey.clientIDKey: ApiConstants.clientID,
+      ApiKey.clientIDKey: ApiConstants.clientID, //'579319840358175'
       ApiKey.redirectUriKey: ApiConstants.redirectUri,
       ApiKey.clientSecretKey: ApiConstants.appSecret,
       ApiKey.codeKey: authorizationCode,
@@ -91,16 +72,13 @@ class InstagramApiService extends Service {
 
   Future<Map<String, dynamic>> getMediaDetails(
       String mediaID, String token) async {
-    /// Parse according fieldsList.
-    /// Request complete media informations.
-    /// Returning the response as Map<String, dynamic>
     final String fields = mediaFields.join(',');
     final http.Response responseMediaSingle = await http.get(Uri.parse(
         '${ApiConstants.instagramGraphUrl}$mediaID?fields=$fields&access_token=$token'));
     return json.decode(responseMediaSingle.body);
   }
 
-  Future<void> getAllMedias() async {
+  void getAllMedias() async {
     String token = '';
     if (ApiConstants.longToken != null) {
       token = ApiConstants.longToken!;
@@ -111,35 +89,31 @@ class InstagramApiService extends Service {
       final String fields = mediasListFields.join(',');
       final http.Response responseMedia = await http.get(Uri.parse(
           'https://graph.instagram.com/${ApiConstants.userID}/media?fields=$fields&access_token=$token'));
-      mediasList = json.decode(responseMedia.body);
-      Map<String, dynamic> error = mediasList['error'];
-      print(error);
-      List<dynamic> values = mediasList['data'];
+      Map<String, dynamic> instagramData = json.decode(responseMedia.body);
+      List<dynamic> values = instagramData['data'];
       List<InstagramMediaCaptionModel> captions = values
           .map((e) =>
               InstagramMediaCaptionModel.fromJson((e as Map<String, dynamic>)))
           .toList();
       _itemsService.addShopItemsCaptions(captions);
-      for (var e in values) {
-        (e as Map<String, dynamic>).forEach((key, value) async {
-          if (key == 'id') {
-            Map<String, dynamic> json = await getMediaDetails(value, token);
-            InstagramMediaModel mediaItem =
-                InstagramMediaModel.fromJson(json, getMediaCaption(value));
-            _itemsService.addShopItem(mediaItem);
-          }
-        });
-      }
+      _getMediaItems(values, token);
     } catch (e) {
       debugPrint(e.toString());
       rethrow;
     }
+  }
 
-    /// Parse according fieldsList.
-    /// Request instagram user medias list.
-    /// Request for each media id the details.
-    /// Set all medias as list Object.
-    /// Returning the List<InstaMedia>.
+  void _getMediaItems(List<dynamic> values, String token) {
+    for (var e in values) {
+      (e as Map<String, dynamic>).forEach((key, value) async {
+        if (key == 'id') {
+          Map<String, dynamic> json = await getMediaDetails(value, token);
+          InstagramMediaModel mediaItem =
+              InstagramMediaModel.fromJson(json, getMediaCaption(value));
+          _itemsService.addShopItem(mediaItem);
+        }
+      });
+    }
   }
 
   Future<bool> exchangeShortToLongToken() async {
@@ -183,12 +157,6 @@ class InstagramApiService extends Service {
     StoreUtils.setString(StoreStringId.dateTokenProvided, datetime);
   }
 
-  void saveAll() {
-    StoreUtils.setString(StoreStringId.clientId, ApiConstants.clientID);
-    StoreUtils.setString(StoreStringId.appSecret, ApiConstants.appSecret);
-    StoreUtils.setString(StoreStringId.userID, ApiConstants.userID);
-  }
-
   Future<bool> getLongToken() async {
     ApiConstants.longToken =
         await StoreUtils.getString(StoreStringId.longToken);
@@ -204,13 +172,5 @@ class InstagramApiService extends Service {
     }
     _itemsService.addCaption(caption);
     return caption;
-  }
-
-  bool checkLongToken() {
-    if (ApiConstants.longToken == null) {
-      return false;
-    } else {
-      return true;
-    }
   }
 }

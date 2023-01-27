@@ -9,9 +9,7 @@ class AppService extends Service {
   var _isFirstOpening = true;
   var _isOnboardingDone = false;
 
-  AppService() : super() {
-    _restore;
-  }
+  AppService() : super();
 }
 
 extension Output on AppService {

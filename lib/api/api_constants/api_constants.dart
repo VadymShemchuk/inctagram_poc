@@ -1,6 +1,3 @@
-import 'package:insta_poc/store/store_consts.dart';
-import 'package:insta_poc/store/store_utils.dart';
-
 class ApiConstants {
   static const instagramOAuth = 'https://api.instagram.com/oauth/authorize?';
   static const instagramAsesTokenUrl =
@@ -9,9 +6,9 @@ class ApiConstants {
   static const redirectUri = 'https://www.mysite.com/';
   static const grantTypeValue = 'authorization_code';
 
-  static late String? clientID;
-  static late String? appSecret; // = 'ac7b28a26809fe5c1d3450b19c261c4b';
-  static late String? userID; // = '17841457395149623';
+  static String? clientID;
+  static String? appSecret;
+  static String? userID;
   static String? longToken;
   static int? expiresInSeconds;
 }

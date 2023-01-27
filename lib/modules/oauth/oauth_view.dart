@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
-import 'package:insta_poc/modules/instagram_oauth/insta_oauth_presenter.dart';
+import 'package:insta_poc/modules/oauth/oauth_presenter.dart';
 import 'package:insta_poc/state_managment/view.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

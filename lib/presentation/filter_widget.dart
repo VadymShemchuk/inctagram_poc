@@ -3,11 +3,11 @@ import 'package:insta_poc/api/tag_model.dart';
 import 'package:insta_poc/common/shop_page_singleton.dart';
 
 class TagsFilter extends StatefulWidget {
-  TagsFilter({
+  const TagsFilter({
     super.key,
     required this.tags,
   });
-  List<TagModel> tags;
+  final List<TagModel> tags;
 
   @override
   State<TagsFilter> createState() => _TagsFilterState();
