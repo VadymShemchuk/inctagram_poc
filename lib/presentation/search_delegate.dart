@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:insta_poc/api/instagram_api.dart';
 import 'package:insta_poc/api/media_model.dart';
 import 'package:insta_poc/presentation/detailed_item_widget.dart';
 import 'package:insta_poc/presentation/instagram_item_card.dart';
 
 class MediaSearhDelegate extends SearchDelegate {
-  List<String> results =
-      InstagramApi.mediaCaptions.map((e) => e.caption).toList();
+  final List<InstagramMediaModel> shopItems;
+  final List<String> captionItems;
+
+  MediaSearhDelegate({
+    required this.shopItems,
+    required this.captionItems,
+  });
+
   @override
   List<Widget>? buildActions(BuildContext context) => [
         IconButton(
@@ -30,7 +35,7 @@ class MediaSearhDelegate extends SearchDelegate {
   @override
   Widget buildResults(BuildContext context) {
     List<InstagramMediaModel> searchResults = [];
-    for (var model in InstagramApi.mediasResults) {
+    for (var model in shopItems) {
       if (model.caption == query) {
         searchResults.add(model);
       }
@@ -58,7 +63,7 @@ class MediaSearhDelegate extends SearchDelegate {
                   MaterialPageRoute<void>(
                     builder: (BuildContext context) => DetailedItem(
                       media: searchResults[index],
-                      medias: InstagramApi.mediasResults,
+                      medias: shopItems,
                     ),
                   ),
                 ),
@@ -70,7 +75,7 @@ class MediaSearhDelegate extends SearchDelegate {
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    List<String> suggestions = results.where((element) {
+    List<String> suggestions = captionItems.where((element) {
       final result = element.toLowerCase();
       final input = query.toLowerCase();
       return result.contains(input);

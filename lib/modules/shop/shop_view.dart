@@ -1,27 +1,27 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:insta_poc/api/instagram_api.dart';
 import 'package:insta_poc/api/media_model.dart';
 import 'package:insta_poc/common/shop_page_singleton.dart';
+import 'package:insta_poc/modules/shop/shop_presenter.dart';
 import 'package:insta_poc/presentation/detailed_item_widget.dart';
 import 'package:insta_poc/presentation/filter_widget.dart';
 import 'package:insta_poc/presentation/instagram_item_card.dart';
 import 'package:insta_poc/presentation/search_delegate.dart';
 
-class ShopSelectionPage extends StatefulWidget {
-  final List<InstagramMediaModel> medias;
+class ShopView extends StatefulWidget {
+  final ShopPresenter presenter;
 
-  ShopSelectionPage({
+  const ShopView({
     super.key,
-    required this.medias,
+    required this.presenter,
   });
 
   @override
-  _ShopSelectionPageState createState() => _ShopSelectionPageState();
+  _ShopViewState createState() => _ShopViewState();
 }
 
-class _ShopSelectionPageState extends State<ShopSelectionPage> {
+class _ShopViewState extends State<ShopView> {
   bool showTags = false;
   late List<InstagramMediaModel> medias;
   late StreamSubscription onTagsSubscription;
@@ -29,30 +29,32 @@ class _ShopSelectionPageState extends State<ShopSelectionPage> {
 
   @override
   void initState() {
-    medias = widget.medias;
+    medias = widget.presenter.shopItems;
     onTagsSubscription = TagsStream.onTagsAdd.listen((tags) {
       if (tags.isNotEmpty) {
         if (lasttaglength > tags.length) {
-          widget.medias.map((model) {
+          widget.presenter.shopItems.map((model) {
             model.isHaveTag = false;
           }).toList();
         }
         lasttaglength = tags.length;
         for (var tag in tags) {
-          widget.medias.map((model) {
+          widget.presenter.shopItems.map((model) {
             if (model.caption.contains(tag)) {
               model.isHaveTag = true;
             }
           }).toList();
-          medias = widget.medias.where((element) => element.isHaveTag).toList();
+          medias = widget.presenter.shopItems
+              .where((element) => element.isHaveTag)
+              .toList();
           setState(() {});
         }
       } else {
-        widget.medias.map((model) {
+        widget.presenter.shopItems.map((model) {
           model.isHaveTag = false;
         }).toList();
         medias.clear();
-        medias = widget.medias;
+        medias = widget.presenter.shopItems;
         setState(() {});
       }
     });
@@ -80,7 +82,9 @@ class _ShopSelectionPageState extends State<ShopSelectionPage> {
           IconButton(
               onPressed: () => showSearch(
                     context: context,
-                    delegate: MediaSearhDelegate(),
+                    delegate: MediaSearhDelegate(
+                        shopItems: widget.presenter.shopItems,
+                        captionItems: widget.presenter.captionItems),
                   ),
               icon: const Icon(Icons.search))
         ],
@@ -97,7 +101,7 @@ class _ShopSelectionPageState extends State<ShopSelectionPage> {
                 visible: showTags,
                 child: Expanded(
                   child: TagsFilter(
-                    tags: InstagramApi.tagsModels,
+                    tags: widget.presenter.tags,
                   ),
                 )),
             Expanded(
@@ -117,8 +121,8 @@ class _ShopSelectionPageState extends State<ShopSelectionPage> {
                           context,
                           MaterialPageRoute<void>(
                             builder: (BuildContext context) => DetailedItem(
-                              media: widget.medias[index],
-                              medias: widget.medias,
+                              media: widget.presenter.shopItems[index],
+                              medias: widget.presenter.shopItems,
                             ),
                           ),
                         ),
